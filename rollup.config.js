@@ -15,6 +15,7 @@ export default [
         file: packageJson.main,
         format: 'cjs',
         sourcemap: true,
+        exports: 'named',
       },
       {
         file: packageJson.module,
@@ -34,7 +35,7 @@ export default [
     external: ['react', 'react-dom'],
   },
   {
-    input: 'dist/index.d.ts',
+    input: 'dist/types.d.ts',
     output: [{ file: 'dist/index.d.ts', format: 'esm' }],
     plugins: [dts()],
     external: [/\.css$/],

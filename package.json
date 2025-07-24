@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "build": "rollup -c && cp src/TodoList.css dist/",
-    "dev": "rollup -c -w",
+    "dev": "rollup -c rollup.config.dev.js -w",
     "test": "jest",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",

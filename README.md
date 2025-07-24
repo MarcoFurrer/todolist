@@ -30,6 +30,7 @@ yarn add @marcofurrer/react-todolist
 ```jsx
 import React, { useState } from 'react';
 import { TodoList } from '@marcofurrer/react-todolist';
+import '@marcofurrer/react-todolist/dist/TodoList.css';
 
 function App() {
   const [todos, setTodos] = useState([]);
@@ -188,6 +189,16 @@ To contribute to this project:
 3. Start development: `npm run dev`
 4. Build: `npm run build`
 5. Run tests: `npm test`
+6. Start Storybook: `npm run storybook`
+
+### Development Commands
+
+- `npm run dev` - Start development build with watch mode
+- `npm run build` - Build the library for production
+- `npm test` - Run Jest tests
+- `npm run storybook` - Start Storybook for component development
+- `npm run lint` - Run ESLint
+- `npm run lint:fix` - Fix ESLint issues automatically
 
 ## 📄 License
 

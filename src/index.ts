@@ -1,5 +1,2 @@
-import TodoListComponent from './TodoList';
-
-export { TodoListComponent as TodoList };
+export { default as TodoList } from './TodoList';
 export type { TodoItem, TodoListProps } from './types';
-export default TodoListComponent;
