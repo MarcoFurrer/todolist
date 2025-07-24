@@ -1,8 +1,8 @@
 {
-  "name": "@marcofurrer/react-todolist",
-  "version": "1.0.0",
+  "name": "react-todolist-component",
+  "version": "1.1.0",
   "type": "module",
-  "description": "A clean, customizable React TodoList component with TypeScript support",
+  "description": "A clean, customizable React TodoList component with TypeScript support and advanced modal editor",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
@@ -41,7 +41,8 @@
   },
   "peerDependencies": {
     "react": ">=16.8.0",
-    "react-dom": ">=16.8.0"
+    "react-dom": ">=16.8.0",
+    "react-cart-editor": "^1.0.0"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.7",

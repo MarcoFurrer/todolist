@@ -1,4 +1,4 @@
-# @marcofurrer/react-todolist
+# react-todolist-component
 
 A clean, customizable React TodoList component with TypeScript support. Perfect for adding todo functionality to your React applications.
 
@@ -17,13 +17,13 @@ A clean, customizable React TodoList component with TypeScript support. Perfect 
 ## 📦 Installation
 
 ```bash
-npm install @marcofurrer/react-todolist react-cart-editor
+npm install react-todolist-component react-cart-editor
 ```
 
 or
 
 ```bash
-yarn add @marcofurrer/react-todolist react-cart-editor
+yarn add react-todolist-component react-cart-editor
 ```
 
 > **Note**: `react-cart-editor` is required for the advanced modal editor feature.
@@ -32,8 +32,8 @@ yarn add @marcofurrer/react-todolist react-cart-editor
 
 ```jsx
 import React, { useState } from 'react';
-import { TodoList } from '@marcofurrer/react-todolist';
-import '@marcofurrer/react-todolist/dist/TodoList.css';
+import { TodoList } from 'react-todolist-component';
+import 'react-todolist-component/dist/TodoList.css';
 // Import cart editor styles for advanced editing modal
 import 'react-cart-editor/dist/style.css';
 
