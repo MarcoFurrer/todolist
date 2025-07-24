@@ -12,6 +12,9 @@ fontAwesome.rel = 'stylesheet';
 fontAwesome.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css';
 document.head.appendChild(fontAwesome);
 
+// Import Cart Editor CSS for Storybook
+import '../node_modules/react-cart-editor/dist/style.css';
+
 const preview: Preview = {
   parameters: {
     actions: { argTypesRegex: '^on[A-Z].*' },

@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import clsx from 'clsx';
 import { TodoItem, TodoListProps } from './types';
+import { CartEditor, CartItem } from 'react-cart-editor';
 
 const TodoList: React.FC<TodoListProps> = ({
   items = [],
@@ -29,6 +30,10 @@ const TodoList: React.FC<TodoListProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<'createdAt' | 'priority' | 'dueDate' | 'text'>(sortBy);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(sortOrder);
+  
+  // Cart Editor state
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [currentEditItem, setCurrentEditItem] = useState<TodoItem | null>(null);
 
   // Pure utility functions - beautiful in their simplicity
   const formatDate = (date: Date) => date.toLocaleDateString('en-US', {
@@ -43,6 +48,31 @@ const TodoList: React.FC<TodoListProps> = ({
   };
 
   const isOverdue = (dueDate?: Date): boolean => !!dueDate && dueDate < new Date();
+
+  // Convert TodoItem to CartItem for the editor
+  const todoToCartItem = (todo: TodoItem): CartItem => ({
+    id: todo.id,
+    title: todo.text,
+    description: `Created: ${formatDate(todo.createdAt)}${todo.updatedAt !== todo.createdAt ? ` | Updated: ${formatDate(todo.updatedAt)}` : ''}`,
+    complete: todo.completed,
+    assignedTo: todo.assignedTo || 'Unassigned',
+    priority: todo.priority,
+    dueDate: todo.dueDate ? todo.dueDate.toISOString().split('T')[0] : undefined,
+    tags: todo.category ? [todo.category] : [],
+    comments: []
+  });
+
+  // Convert CartItem back to TodoItem updates
+  const cartItemToTodoUpdate = (cartItem: CartItem, originalTodo: TodoItem) => ({
+    ...originalTodo,
+    text: cartItem.title,
+    completed: cartItem.complete,
+    assignedTo: cartItem.assignedTo === 'Unassigned' ? undefined : cartItem.assignedTo,
+    priority: cartItem.priority,
+    dueDate: cartItem.dueDate ? new Date(cartItem.dueDate) : undefined,
+    category: cartItem.tags?.[0],
+    updatedAt: new Date()
+  });
 
   // Event handlers - clean and purposeful
   const addTodo = (e: React.FormEvent) => {
@@ -73,6 +103,29 @@ const TodoList: React.FC<TodoListProps> = ({
   const cancelEdit = () => {
     setEditingId(null);
     setEditText('');
+  };
+
+  // Cart Editor handlers
+  const openEditor = (item: TodoItem) => {
+    setCurrentEditItem(item);
+    setIsEditorOpen(true);
+  };
+
+  const closeEditor = () => {
+    setIsEditorOpen(false);
+    setCurrentEditItem(null);
+  };
+
+  const saveFromEditor = (cartItem: CartItem) => {
+    if (currentEditItem && onEditItem) {
+      const updatedTodo = cartItemToTodoUpdate(cartItem, currentEditItem);
+      // Use the existing onEditItem callback to update the todo
+      onEditItem(updatedTodo.id, updatedTodo.text);
+      
+      // If we had more advanced update capabilities, we could pass the full object
+      // For now, we'll work within the existing callback structure
+    }
+    closeEditor();
   };
 
   const handleSort = (field: string) => {
@@ -254,6 +307,7 @@ const TodoList: React.FC<TodoListProps> = ({
                         onSave={saveEdit}
                         onCancel={cancelEdit}
                         onDelete={deleteTodo}
+                        onOpenEditor={openEditor}
                         formatDate={formatDate}
                         getPriorityVariant={getPriorityVariant}
                         isOverdue={isOverdue}
@@ -300,6 +354,19 @@ const TodoList: React.FC<TodoListProps> = ({
           </div>
         </div>
       </div>
+      
+      {/* Cart Editor Modal */}
+      {currentEditItem && (
+        <CartEditor
+          isOpen={isEditorOpen}
+          onClose={closeEditor}
+          onSave={saveFromEditor}
+          item={todoToCartItem(currentEditItem)}
+          title="Edit Task"
+          showComments={false}
+          currentUser="Current User"
+        />
+      )}
     </div>
   );
 };
@@ -315,6 +382,7 @@ interface TodoRowProps {
   onSave: () => void;
   onCancel: () => void;
   onDelete: (id: string) => void;
+  onOpenEditor: (item: TodoItem) => void;
   formatDate: (date: Date) => string;
   getPriorityVariant: (priority?: string) => string;
   isOverdue: (dueDate?: Date) => boolean;
@@ -338,6 +406,7 @@ const TodoRow: React.FC<TodoRowProps> = ({
   onSave,
   onCancel,
   onDelete,
+  onOpenEditor,
   formatDate,
   getPriorityVariant,
   isOverdue,
@@ -396,7 +465,15 @@ const TodoRow: React.FC<TodoRowProps> = ({
             </button>
           </div>
         ) : (
-          <span className={clsx({ 'text-decoration-line-through text-muted': item.completed })}>
+          <span 
+            className={clsx('d-inline-block', { 
+              'text-decoration-line-through text-muted': item.completed,
+              'cursor-pointer': true
+            })}
+            onClick={() => onOpenEditor(item)}
+            title="Click to edit in detailed editor"
+            style={{ cursor: 'pointer' }}
+          >
             {item.text}
           </span>
         )}

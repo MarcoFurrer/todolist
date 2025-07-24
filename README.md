@@ -11,19 +11,22 @@ A clean, customizable React TodoList component with TypeScript support. Perfect 
 - 🎯 **Feature Rich** - Priority levels, categories, due dates, assignments
 - 🔍 **Filtering & Sorting** - Multiple filter and sort options
 - ✏️ **Inline Editing** - Edit todos directly in the list
+- 🗂️ **Advanced Editor** - Click on any task to open a detailed modal editor
 - 🎭 **Accessible** - Full keyboard and screen reader support
 
 ## 📦 Installation
 
 ```bash
-npm install @marcofurrer/react-todolist
+npm install @marcofurrer/react-todolist react-cart-editor
 ```
 
 or
 
 ```bash
-yarn add @marcofurrer/react-todolist
+yarn add @marcofurrer/react-todolist react-cart-editor
 ```
+
+> **Note**: `react-cart-editor` is required for the advanced modal editor feature.
 
 ## 🚀 Quick Start
 
@@ -31,6 +34,8 @@ yarn add @marcofurrer/react-todolist
 import React, { useState } from 'react';
 import { TodoList } from '@marcofurrer/react-todolist';
 import '@marcofurrer/react-todolist/dist/TodoList.css';
+// Import cart editor styles for advanced editing modal
+import 'react-cart-editor/dist/style.css';
 
 function App() {
   const [todos, setTodos] = useState([]);
@@ -78,6 +83,33 @@ function App() {
 }
 
 export default App;
+```
+
+## 🗂️ Advanced Task Editor
+
+The TodoList now includes an advanced modal editor that opens when you click on any task. This provides a rich editing experience with:
+
+- **Detailed Form Fields**: Edit title, description, assignee, priority, and due date
+- **Elegant Modal Interface**: Beautiful, responsive modal with smooth animations
+- **Enhanced User Experience**: Better than inline editing for complex task details
+- **Professional Design**: Matches the overall component aesthetic
+
+### Using the Advanced Editor
+
+Simply click on any task text to open the detailed editor modal. The editor will:
+
+1. **Auto-populate** with the current task information
+2. **Allow rich editing** of all task properties
+3. **Save changes** back to your todo list
+4. **Provide validation** and error handling
+
+### Styling the Editor
+
+The cart editor styles are automatically included when you import:
+
+```css
+/* Required for the advanced editor modal */
+@import 'react-cart-editor/dist/style.css';
 ```
 
 ## 📋 API Reference
