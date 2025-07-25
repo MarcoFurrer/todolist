@@ -1,6 +1,6 @@
 {
   "name": "react-todolist-component",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "type": "module",
   "description": "A clean, customizable React TodoList component with TypeScript support and advanced modal editor",
   "main": "dist/index.js",
