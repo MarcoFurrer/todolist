@@ -41,8 +41,7 @@
   },
   "peerDependencies": {
     "react": ">=16.8.0",
-    "react-dom": ">=16.8.0",
-    "react-cart-editor": "^1.0.0"
+    "react-dom": ">=16.8.0"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.7",
@@ -74,6 +73,6 @@
   },
   "dependencies": {
     "clsx": "^2.0.0",
-    "react-cart-editor": "^1.0.0"
+    "react-cart-editor": "^1.1.0"
   }
 }

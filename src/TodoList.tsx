@@ -24,9 +24,6 @@ const TodoList: React.FC<TodoListProps> = ({
   sortOrder = 'desc'
 }) => {
   // State - keeping it simple and focused
-  const [newItemText, setNewItemText] = useState('');
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editText, setEditText] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<'createdAt' | 'priority' | 'dueDate' | 'text'>(sortBy);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(sortOrder);
@@ -34,6 +31,7 @@ const TodoList: React.FC<TodoListProps> = ({
   // Cart Editor state
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [currentEditItem, setCurrentEditItem] = useState<TodoItem | null>(null);
+  const [isCreatingNew, setIsCreatingNew] = useState(false);
 
   // Pure utility functions - beautiful in their simplicity
   const formatDate = (date: Date) => date.toLocaleDateString('en-US', {
@@ -56,9 +54,7 @@ const TodoList: React.FC<TodoListProps> = ({
     description: `Created: ${formatDate(todo.createdAt)}${todo.updatedAt !== todo.createdAt ? ` | Updated: ${formatDate(todo.updatedAt)}` : ''}`,
     complete: todo.completed,
     assignedTo: todo.assignedTo || 'Unassigned',
-    priority: todo.priority,
     dueDate: todo.dueDate ? todo.dueDate.toISOString().split('T')[0] : undefined,
-    tags: todo.category ? [todo.category] : [],
     comments: []
   });
 
@@ -68,65 +64,54 @@ const TodoList: React.FC<TodoListProps> = ({
     text: cartItem.title,
     completed: cartItem.complete,
     assignedTo: cartItem.assignedTo === 'Unassigned' ? undefined : cartItem.assignedTo,
-    priority: cartItem.priority,
     dueDate: cartItem.dueDate ? new Date(cartItem.dueDate) : undefined,
-    category: cartItem.tags?.[0],
     updatedAt: new Date()
   });
 
   // Event handlers - clean and purposeful
-  const addTodo = (e: React.FormEvent) => {
-    e.preventDefault();
-    const text = newItemText.trim();
-    if (text && onAddItem) {
-      onAddItem(text);
-      setNewItemText('');
-    }
-  };
-
   const toggleTodo = (id: string) => onToggleItem?.(id);
-  const deleteTodo = (id: string) => onDeleteItem?.(id);
-
-  const startEdit = (item: TodoItem) => {
-    setEditingId(item.id);
-    setEditText(item.text);
-  };
-
-  const saveEdit = () => {
-    const text = editText.trim();
-    if (editingId && text && onEditItem) {
-      onEditItem(editingId, text);
-      cancelEdit();
-    }
-  };
-
-  const cancelEdit = () => {
-    setEditingId(null);
-    setEditText('');
-  };
 
   // Cart Editor handlers
   const openEditor = (item: TodoItem) => {
     setCurrentEditItem(item);
+    setIsCreatingNew(false);
+    setIsEditorOpen(true);
+  };
+
+  const openNewTodoEditor = () => {
+    setCurrentEditItem(null);
+    setIsCreatingNew(true);
     setIsEditorOpen(true);
   };
 
   const closeEditor = () => {
     setIsEditorOpen(false);
     setCurrentEditItem(null);
+    setIsCreatingNew(false);
   };
 
   const saveFromEditor = (cartItem: CartItem) => {
-    if (currentEditItem && onEditItem) {
+    if (isCreatingNew && onAddItem) {
+      // Creating a new todo
+      onAddItem(cartItem.title);
+    } else if (currentEditItem && onEditItem) {
+      // Editing existing todo
       const updatedTodo = cartItemToTodoUpdate(cartItem, currentEditItem);
-      // Use the existing onEditItem callback to update the todo
       onEditItem(updatedTodo.id, updatedTodo.text);
-      
-      // If we had more advanced update capabilities, we could pass the full object
-      // For now, we'll work within the existing callback structure
     }
     closeEditor();
   };
+
+  // Create a new CartItem for new todo creation
+  const createNewCartItem = (): CartItem => ({
+    id: Date.now().toString(),
+    title: '',
+    description: 'New task',
+    complete: false,
+    assignedTo: 'Unassigned',
+    dueDate: undefined,
+    comments: []
+  });
 
   const handleSort = (field: string) => {
     const validField = field as 'createdAt' | 'priority' | 'dueDate' | 'text';
@@ -203,8 +188,7 @@ const TodoList: React.FC<TodoListProps> = ({
     { show: showCategory, key: 'category', label: 'Category' },
     { show: showDueDate, key: 'dueDate', label: 'Due Date', sortable: true },
     { show: showAssignedTo, key: 'assignedTo', label: 'Assigned To', sortable: true },
-    { show: true, key: 'createdAt', label: 'Created', sortable: true },
-    { show: allowEdit || allowDelete, key: 'actions', label: 'Actions', width: '120px' }
+    { show: true, key: 'createdAt', label: 'Created', sortable: true }
   ].filter(col => col.show);
 
   const totalColumns = columns.length;
@@ -217,13 +201,12 @@ const TodoList: React.FC<TodoListProps> = ({
             {/* Header with clean layout */}
             <div className="row align-items-center mb-3">
               <div className="col-md-6">
-                <h2 className="mb-0">
-                  Todo List
-                  <span className="badge bg-primary ms-2">{processedItems.length}</span>
-                </h2>
-                <small className="text-muted">
-                  {stats.completed} of {stats.total} completed
-                </small>
+                <div className="d-flex align-items-center">
+                  <span className="badge bg-primary me-2">{processedItems.length}</span>
+                  <small className="text-muted">
+                    {stats.completed} of {stats.total} completed
+                  </small>
+                </div>
               </div>
               <div className="col-md-6">
                 <div className="input-group">
@@ -241,29 +224,18 @@ const TodoList: React.FC<TodoListProps> = ({
               </div>
             </div>
 
-            {/* Add form - beautifully simple */}
+            {/* Add new todo button */}
             {onAddItem && (
-              <form onSubmit={addTodo} className="row g-2 mb-3">
-                <div className="col">
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder={placeholder}
-                    value={newItemText}
-                    onChange={(e) => setNewItemText(e.target.value)}
-                  />
-                </div>
-                <div className="col-auto">
-                  <button 
-                    type="submit" 
-                    className="btn btn-primary"
-                    disabled={!newItemText.trim()}
-                  >
-                    <i className="fas fa-plus me-1"></i>
-                    Add Task
-                  </button>
-                </div>
-              </form>
+              <div className="mb-3">
+                <button
+                  className="btn btn-primary"
+                  onClick={openNewTodoEditor}
+                  type="button"
+                >
+                  <i className="fas fa-plus me-2"></i>
+                  Add New Todo
+                </button>
+              </div>
             )}
 
             {/* Dynamic table with smart column rendering */}
@@ -299,14 +271,7 @@ const TodoList: React.FC<TodoListProps> = ({
                       <TodoRow 
                         key={item.id}
                         item={item}
-                        editingId={editingId}
-                        editText={editText}
-                        setEditText={setEditText}
                         onToggle={toggleTodo}
-                        onEdit={startEdit}
-                        onSave={saveEdit}
-                        onCancel={cancelEdit}
-                        onDelete={deleteTodo}
                         onOpenEditor={openEditor}
                         formatDate={formatDate}
                         getPriorityVariant={getPriorityVariant}
@@ -316,9 +281,6 @@ const TodoList: React.FC<TodoListProps> = ({
                         showDueDate={showDueDate}
                         showAssignedTo={showAssignedTo}
                         allowEdit={allowEdit}
-                        allowDelete={allowDelete}
-                        onEditItem={onEditItem}
-                        onDeleteItem={onDeleteItem}
                       />
                     ))
                   )}
@@ -353,20 +315,17 @@ const TodoList: React.FC<TodoListProps> = ({
             )}
           </div>
         </div>
+
+        {/* Cart Editor Modal */}
+        {isEditorOpen && (
+          <CartEditor
+            item={isCreatingNew ? createNewCartItem() : todoToCartItem(currentEditItem!)}
+            isOpen={isEditorOpen}
+            onSave={saveFromEditor}
+            onClose={closeEditor}
+          />
+        )}
       </div>
-      
-      {/* Cart Editor Modal */}
-      {currentEditItem && (
-        <CartEditor
-          isOpen={isEditorOpen}
-          onClose={closeEditor}
-          onSave={saveFromEditor}
-          item={todoToCartItem(currentEditItem)}
-          title="Edit Task"
-          showComments={false}
-          currentUser="Current User"
-        />
-      )}
     </div>
   );
 };
@@ -374,14 +333,7 @@ const TodoList: React.FC<TodoListProps> = ({
 // Separate TodoRow component for better organization and readability
 interface TodoRowProps {
   item: TodoItem;
-  editingId: string | null;
-  editText: string;
-  setEditText: (text: string) => void;
   onToggle: (id: string) => void;
-  onEdit: (item: TodoItem) => void;
-  onSave: () => void;
-  onCancel: () => void;
-  onDelete: (id: string) => void;
   onOpenEditor: (item: TodoItem) => void;
   formatDate: (date: Date) => string;
   getPriorityVariant: (priority?: string) => string;
@@ -391,21 +343,11 @@ interface TodoRowProps {
   showDueDate: boolean;
   showAssignedTo: boolean;
   allowEdit: boolean;
-  allowDelete: boolean;
-  onEditItem?: (id: string, text: string) => void;
-  onDeleteItem?: (id: string) => void;
 }
 
 const TodoRow: React.FC<TodoRowProps> = ({
   item,
-  editingId,
-  editText,
-  setEditText,
   onToggle,
-  onEdit,
-  onSave,
-  onCancel,
-  onDelete,
   onOpenEditor,
   formatDate,
   getPriorityVariant,
@@ -414,14 +356,9 @@ const TodoRow: React.FC<TodoRowProps> = ({
   showCategory,
   showDueDate,
   showAssignedTo,
-  allowEdit,
-  allowDelete,
-  onEditItem,
-  onDeleteItem
+  allowEdit
 }) => {
-  const isEditing = editingId === item.id;
   const rowClass = clsx({
-    'table-warning': isOverdue(item.dueDate) && !item.completed,
     'table-success': item.completed
   });
 
@@ -444,39 +381,17 @@ const TodoRow: React.FC<TodoRowProps> = ({
 
       {/* Task Text */}
       <td>
-        {isEditing ? (
-          <div className="d-flex gap-2 align-items-center">
-            <input
-              type="text"
-              value={editText}
-              onChange={(e) => setEditText(e.target.value)}
-              className="form-control form-control-sm"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') onSave();
-                if (e.key === 'Escape') onCancel();
-              }}
-              autoFocus
-            />
-            <button onClick={onSave} className="btn btn-sm btn-success" title="Save">
-              <i className="fas fa-check"></i>
-            </button>
-            <button onClick={onCancel} className="btn btn-sm btn-secondary" title="Cancel">
-              <i className="fas fa-times"></i>
-            </button>
-          </div>
-        ) : (
-          <span 
-            className={clsx('d-inline-block', { 
-              'text-decoration-line-through text-muted': item.completed,
-              'cursor-pointer': true
-            })}
-            onClick={() => onOpenEditor(item)}
-            title="Click to edit in detailed editor"
-            style={{ cursor: 'pointer' }}
-          >
-            {item.text}
-          </span>
-        )}
+        <span 
+          className={clsx('d-inline-block', { 
+            'text-decoration-line-through text-muted': item.completed,
+            'cursor-pointer': allowEdit
+          })}
+          onClick={allowEdit ? () => onOpenEditor(item) : undefined}
+          title={allowEdit ? "Click to edit in detailed editor" : undefined}
+          style={allowEdit ? { cursor: 'pointer' } : undefined}
+        >
+          {item.text}
+        </span>
       </td>
 
       {/* Priority */}
@@ -508,7 +423,6 @@ const TodoRow: React.FC<TodoRowProps> = ({
         <td>
           {item.dueDate ? (
             <span className={clsx('small', {
-              'text-danger fw-bold': isOverdue(item.dueDate) && !item.completed,
               'text-muted': item.completed
             })}>
               <i className="fas fa-calendar me-1"></i>
@@ -541,32 +455,6 @@ const TodoRow: React.FC<TodoRowProps> = ({
           {formatDate(item.createdAt)}
         </span>
       </td>
-
-      {/* Actions */}
-      {(allowEdit || allowDelete) && !isEditing && (
-        <td>
-          <div className="btn-group" role="group">
-            {allowEdit && onEditItem && (
-              <button
-                onClick={() => onEdit(item)}
-                className="btn btn-sm btn-outline-primary"
-                title="Edit task"
-              >
-                <i className="fas fa-edit"></i>
-              </button>
-            )}
-            {allowDelete && onDeleteItem && (
-              <button
-                onClick={() => onDelete(item.id)}
-                className="btn btn-sm btn-outline-danger"
-                title="Delete task"
-              >
-                <i className="fas fa-trash"></i>
-              </button>
-            )}
-          </div>
-        </td>
-      )}
     </tr>
   );
 };
