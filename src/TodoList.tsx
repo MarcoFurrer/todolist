@@ -323,6 +323,7 @@ const TodoList: React.FC<TodoListProps> = ({
             isOpen={isEditorOpen}
             onSave={saveFromEditor}
             onClose={closeEditor}
+            showComments={true}
           />
         )}
       </div>
